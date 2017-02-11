@@ -10,16 +10,19 @@
 #include "timer.h"
 
 
-class Robot: public frc::IterativeRobot {
+class Robot: public frc::IterativeRobot
+{
 public:
 
 //-------------------------------------------------------//
-//    Other Decerations                                  //
+//                 Other Decorations                     //
 //-------------------------------------------------------//
+
 	bool shifter_varable = false;
 	bool gear_enabled = false;
+
 //-------------------------------------------------------//
-//   Deceration of Objects                               //
+//              Decoration of Objects                    //
 //-------------------------------------------------------//
 
 	//WIP
@@ -210,7 +213,7 @@ public:
 		 }
 
 //-------------------------------------------------------//
-//  		       Operator Remote                       //
+//                 Operator Remote                       //
 //-------------------------------------------------------//
 		//climber up; right bumper; o
 		if (
