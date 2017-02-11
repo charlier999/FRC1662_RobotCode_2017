@@ -22,7 +22,8 @@ public:
 //   Deceration of Objects                               //
 //-------------------------------------------------------//
 
-	Timer::Timer();
+	//WIP
+	//Timer::Timer();
 
 
 	Joystick *driver;
@@ -68,7 +69,13 @@ public:
 
 		extra = new CANTalon(5);
 
-		drive_base = new RobotDrive(drive_right_a, drive_right_b, drive_left_a, drive_left_b);
+		drive_base = new RobotDrive
+			(
+			drive_right_a,
+			drive_right_b,
+			drive_left_a,
+			drive_left_b
+			);
 
 		compressor = new Compressor(0);
 
@@ -94,80 +101,124 @@ public:
 //-------------------------------------------------------//
 
 	//Quadrature Encoder CPR=1024
-		hood->SetFeedbackDevice(CANTalon::QuadEncoder);
+		hood->SetFeedbackDevice
+		(
+		   CANTalon::QuadEncoder
+		 );
 		hood->ConfigEncoderCodesPerRev(1024);
 
 	}
 	void AutonomousInit() override {}
 
-	void AutonomousPeriodic() {
+	void AutonomousPeriodic()
+	{
 		drive_right_a->Set(1.0);
 	}
 
 	void TeleopInit() {}
 
-	void TeleopPeriodic() {
+	void TeleopPeriodic()
+	{
 
 		// drive train; (left joystick; y axis; left drive) (right joystick: y axis; right drive)
-		drive_base->TankDrive(driver->GetRawAxis(1), driver->GetRawAxis(5));
+		drive_base->TankDrive(
+				driver->GetRawAxis(1),
+				driver->GetRawAxis(5)
+							 );
 //-------------------------------------------------------//
 //                 Drive Remote                          //
 //-------------------------------------------------------//
 
 		//shooter; left bumper
-		if(driver->GetRawButton(5)) {
+		if(
+				driver->GetRawButton(5)
+		  )
+		{
 			shooter->Set(0.60);
 		}else{
 			shooter->Set(0.0);
-		}
+		     }
 
 		//intake in; right trigger
-		if (driver->GetRawAxis(2)) {
+		if (
+			driver->GetRawAxis(2)
+		   )
+		{
 			intake->Set(-1.0);
 		}else{
 			intake->Set(0.0);
-		}
+			  }
 
 		//aggitator; "B" button
-		if (driver->GetRawButton(3)){
-
+		if (
+			driver->GetRawButton(3)
+		    )
+		{
 			aggitater->Set(1.0);
-
 		}else{
-
 			aggitater->Set(0.0);
-		}
+		      }
 		//shifters; "A" button
-		if (driver->GetRawButton(2)){
-			if (!shifter_varable){
+		if (
+			driver->GetRawButton(2)
+			)
+		{
+			if (
+					!shifter_varable
+				)
+			{
 				shifter_varable = true;
-				shifter->Set(shifter->Get() == DoubleSolenoid::Value::kReverse ? DoubleSolenoid::Value::kForward : DoubleSolenoid::Value::kReverse);
-				driver->SetRumble(GenericHID::RumbleType::kLeftRumble, 1);
+				shifter->Set(
+					shifter->Get() ==
+					DoubleSolenoid::Value::kReverse ?
+					DoubleSolenoid::Value::kForward :
+					DoubleSolenoid::Value::kReverse
+							 );
+				driver->SetRumble
+				(
+				 GenericHID::RumbleType::kLeftRumble, 1
+				 );
 			}else{
 				shifter_varable = false;
 			     }
-		}
+		 }
 
 		//Gear open close; "B" button
-		if (driver->GetRawButton(1)){
+		if (
+				driver->GetRawButton(1)
+			)
+		{
 
-			if (!gear_enabled){
+			if (
+					!gear_enabled
+				)
+			{
 				gear_enabled = true;
-				gear->Set(gear->Get() == DoubleSolenoid::Value::kReverse ? DoubleSolenoid::Value::kForward : DoubleSolenoid::Value::kReverse);
-				driver->SetRumble(GenericHID::RumbleType::kLeftRumble, 1);
-						}else{
-							gear_enabled = false;
-			}
-		}
+				gear->Set(
+					gear->Get() ==
+					DoubleSolenoid::Value::kReverse ?
+					DoubleSolenoid::Value::kForward :
+					DoubleSolenoid::Value::kReverse
+						  );
+				driver->SetRumble
+				(
+						GenericHID::RumbleType::kLeftRumble, 1
+				 );
+			 }else{
+				gear_enabled = false;
+			 	   }
+		 }
 
 //-------------------------------------------------------//
 //  		       Operator Remote                       //
 //-------------------------------------------------------//
 		//climber up; right bumper; o
-		if (op->GetRawAxis(1)){
-
+		if (
+			op->GetRawAxis(1)
+			)
+		{
 			climber->Set(1.0);
-		}
+		 }
 	}
 private:
 };
