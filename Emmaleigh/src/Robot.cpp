@@ -7,7 +7,7 @@
 #include <SmartDashboard/SmartDashboard.h>
 #include "WPILib.h"
 #include "CANTalon.h"
-#include "timer.h"
+#include "Timer.h"
 
 
 class Robot: public frc::IterativeRobot
@@ -18,16 +18,18 @@ public:
 //                 Other Decorations                     //
 //-------------------------------------------------------//
 
-	bool shifter_varable = false;
-	bool gear_enabled = false;
+	double a_timenow = a_timer->Get();
+	double s_timenow = s_timer->Get();
+	double g_timenow = g_timer->Get();
 
 //-------------------------------------------------------//
 //              Decoration of Objects                    //
 //-------------------------------------------------------//
 
 	//WIP
-	//Timer::Timer();
-
+	frc::Timer *s_timer;
+	frc::Timer *g_timer;
+	frc::Timer *a_timer;
 
 	Joystick *driver;
 	Joystick *driverV2;
@@ -59,10 +61,10 @@ public:
 		op = new Joystick(1);
 		driverV2 = new Joystick(2);
 
-		drive_right_a = new CANTalon(1);
-		drive_right_b = new CANTalon(2);
-		drive_left_a = new CANTalon(8);
-		drive_left_b = new CANTalon(9);
+		drive_right_a = new CANTalon(8);
+		drive_right_b = new CANTalon(9);
+		drive_left_a = new CANTalon(1);
+		drive_left_b = new CANTalon(2);
 
 		intake = new CANTalon(4);
 		shooter = new CANTalon(7);
@@ -82,8 +84,12 @@ public:
 
 		compressor = new Compressor(0);
 
-		gear = new DoubleSolenoid(4, 5);
+		gear = new DoubleSolenoid(0, 2);
 		shifter = new DoubleSolenoid(1, 3);
+
+		s_timer = new frc::Timer();
+		g_timer = new frc::Timer();
+		a_timer = new frc::Timer();
 	}
 	void RobotInit() {
 //-------------------------------------------------------//
@@ -111,26 +117,125 @@ public:
 		hood->ConfigEncoderCodesPerRev(1024);
 
 	}
-	void AutonomousInit() override {}
+	void AutonomousInit() override
+	{
+		a_timer->Reset();
+		a_timer->Start();
+	}
 
 	void AutonomousPeriodic()
 	{
-		drive_right_a->Set(1.0);
-	}
+		if
+		(
+			a_timenow == 0
+		)
+		{
+			drive_base->SetSafetyEnabled(false);
+			drive_base->TankDrive(0.5, 0.5, false);
+		}
 
-	void TeleopInit() {}
+		if
+		(
+			a_timenow == 3.4	//3.4 second delay until next command
+		)
+		{
+
+		gear->Set(
+				gear->Get() ==
+				DoubleSolenoid::Value::kReverse ?
+				DoubleSolenoid::Value::kForward :
+				DoubleSolenoid::Value::kReverse
+				  );
+		}
+
+		if
+		(
+			a_timenow == 4.1 //0.5 second delay until next command
+		)
+		{
+
+		drive_base->TankDrive(-0.5, -0.5, false);
+
+		}
+
+		if
+		(
+			a_timenow == 6.1 //2.0 second delay until next command
+		)
+		{
+		gear->Set(
+				gear->Get() ==
+				DoubleSolenoid::Value::kReverse ?
+				DoubleSolenoid::Value::kForward :
+				DoubleSolenoid::Value::kReverse
+				  );
+		}
+
+		if
+		(
+			a_timenow == 9	//3.0 second delay until next command
+		)
+		{
+		drive_base->TankDrive(0.0, 0.0, false);
+		}
+
+		if
+		(
+			a_timenow == 10 //1.0 second delay until next command
+		)
+		{
+		}
+
+		if
+		(
+			a_timenow == 15	//end of auto
+		)
+		{
+			a_timer->Stop(); // Stops auto timer
+		}
+	}
+	void TeleopInit()
+	{
+		//starting shifter's timer
+		s_timer->Reset();
+		s_timer->Start();
+
+		//starting gear timer
+		g_timer->Reset();
+		g_timer->Start();
+	}
 
 	void TeleopPeriodic()
 	{
 
 		// drive train; (left joystick; y axis; left drive) (right joystick: y axis; right drive)
 		drive_base->TankDrive(
-				driver->GetRawAxis(1),
-				driver->GetRawAxis(5)
+				-driver->GetRawAxis(1),
+				-driver->GetRawAxis(5)
 							 );
 //-------------------------------------------------------//
 //                 Drive Remote                          //
 //-------------------------------------------------------//
+
+		//hood forwards; back button
+		if (
+			driver->GetRawButton(7)
+		    )
+		{
+			hood->Set(1.0);
+		}else{
+			hood->Set(0.0);
+		}
+
+		//hood backwords; start button
+		if (
+			driver->GetRawButton(8)
+		    )
+		{
+			hood->Set(-1.0);
+		}else{
+			hood->Set(0.0);
+		}
 
 		//shooter; left bumper
 		if(
@@ -167,10 +272,10 @@ public:
 			)
 		{
 			if (
-					!shifter_varable
+					s_timenow < .2
 				)
 			{
-				shifter_varable = true;
+				s_timer->Reset();
 				shifter->Set(
 					shifter->Get() ==
 					DoubleSolenoid::Value::kReverse ?
@@ -182,7 +287,7 @@ public:
 				 GenericHID::RumbleType::kLeftRumble, 1
 				 );
 			}else{
-				shifter_varable = false;
+				s_timer->Reset();
 			     }
 		 }
 
@@ -193,10 +298,10 @@ public:
 		{
 
 			if (
-					!gear_enabled
+					g_timenow < .2
 				)
 			{
-				gear_enabled = true;
+				g_timer->Reset();
 				gear->Set(
 					gear->Get() ==
 					DoubleSolenoid::Value::kReverse ?
@@ -208,20 +313,34 @@ public:
 						GenericHID::RumbleType::kLeftRumble, 1
 				 );
 			 }else{
-				gear_enabled = false;
+				g_timer->Start();
 			 	   }
 		 }
+
+	//	climber up; POV UP
+	//	if (
+	//		driver->GetPOV(2)
+	//		)
+	//	{
+	//		climber->Set(1.0);
+	//	 }else{
+	//		climber->Set(0.0);
+	//	 }
+
+	//	//climber down; POV DOWN
+	//	if(
+	//		driver->GetPOV(6)
+	//	   )
+	//	{
+	//		climber->Set(-1.0);
+	//	}else{
+	//		climber->Set(0.0);
+	//	      }
 
 //-------------------------------------------------------//
 //                 Operator Remote                       //
 //-------------------------------------------------------//
-		//climber up; right bumper; o
-		if (
-			op->GetRawAxis(1)
-			)
-		{
-			climber->Set(1.0);
-		 }
+		//noting here; yeah!!!!!
 	}
 private:
 };
