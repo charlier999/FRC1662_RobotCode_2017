@@ -18,9 +18,7 @@ public:
 //                 Other Decorations                     //
 //-------------------------------------------------------//
 
-	double a_timenow = a_timer->Get();
-	double s_timenow = s_timer->Get();
-	double g_timenow = g_timer->Get();
+
 
 //-------------------------------------------------------//
 //              Decoration of Objects                    //
@@ -30,6 +28,10 @@ public:
 	frc::Timer *s_timer;
 	frc::Timer *g_timer;
 	frc::Timer *a_timer;
+
+	double a_timenow = a_timer->Get();
+	double s_timenow = s_timer->Get();
+	double g_timenow = g_timer->Get();
 
 	Joystick *driver;
 	Joystick *driverV2;
@@ -87,9 +89,14 @@ public:
 		gear = new DoubleSolenoid(0, 2);
 		shifter = new DoubleSolenoid(1, 3);
 
+
+
 		s_timer = new frc::Timer();
 		g_timer = new frc::Timer();
 		a_timer = new frc::Timer();
+
+
+
 	}
 	void RobotInit() {
 //-------------------------------------------------------//
@@ -115,6 +122,9 @@ public:
 		   CANTalon::QuadEncoder
 		 );
 		hood->ConfigEncoderCodesPerRev(1024);
+
+
+
 
 	}
 	void AutonomousInit() override
@@ -350,7 +360,6 @@ START_ROBOT_CLASS(Robot);
  * stick->SetRumble(GenericHID::RumbleType::kLeftRumble, 1);
  *
 DoubleSolenoid exampleDouble = new DoubleSolenoid(1, 2);
-
 exampleDouble->Set(DoubleSolenoid::Value::kOff);
 exampleDouble->Set(DoubleSolenoid::Value::kForward);
 exampleDouble->Set(DoubleSolenoid::Value::kReverse);
