@@ -31,6 +31,17 @@ public:
 //-------------------------------------------------------//
 
 	CitrusButton *shifter_button;
+	CitrusButton *gear_button;
+	CitrusButton *shooter_button;
+	CitrusButton *intake_in;
+	CitrusButton *intake_out;
+	CitrusButton *climber_up;
+	CitrusButton *climber_down;
+	CitrusButton *agitator_button;
+	CitrusButton *other;
+	CitrusButton *hood_up;
+	CitrusButton *hood_down;
+
 
 	frc::Timer *s_timer;
 	frc::Timer *g_timer;
@@ -104,7 +115,18 @@ public:
 		s_timepassed = s_timer->HasPeriodPassed(5);
 		g_timepassed = g_timer->HasPeriodPassed(5);
 
-		shifter_button = new CitrusButton(driver, 2);
+		shifter_button = new CitrusButton(driver, 1);
+		gear_button    = new CitrusButton(driver, 3);
+		shooter_button = new CitrusButton(driver, 8);
+		intake_in      = new CitrusButton(driver, 5);
+		intake_out     = new CitrusButton(driver, 6);
+		agitator_button= new CitrusButton(driver, 2);
+		other          = new CitrusButton(driver, 7);
+
+		climber_up     = new CitrusButton(op, 5);
+		climber_down   = new CitrusButton(op, 6);
+		hood_up        = new CitrusButton(op, 4);
+		hood_down      = new CitrusButton(op, 2);
 
 
 
@@ -258,10 +280,10 @@ public:
 		//shooter; left bumper
 		if
 		(
-			driver->GetRawButton(9)
+			shooter_button->ButtonPressed()
 		)
 		{
-			shooter->Set(0.60);
+			shooter->Set(1.0);
 		}else{
 			shooter->Set(0.0);
 		     }
@@ -269,7 +291,7 @@ public:
 		//Intake in; right trigger
 		if
 		(
-			driver->GetRawButton(5)
+			intake_in->ButtonPressed()
 		)
 		{
 			intake->Set(-1.0);
@@ -280,7 +302,7 @@ public:
 		//Intake out; Left Trigger
 		if
 		(
-			driver->GetRawButton(6)
+			intake_out->ButtonPressed()
 		)
 		{
 			intake->Set(-1.0);
@@ -291,16 +313,18 @@ public:
 		//Agitator; "B" button
 		if
 		(
-			driver->GetRawButton(3)
+			agitator_button->ButtonPressed()
 		)
 		{
 			aggitater->Set(1.0);
 		}else{
 			aggitater->Set(0.0);
 		}
+
+		//shifters
 		if
 			(
-					shifter_button->ButtonPressed()
+					shifter_button->ButtonClicked()
 			)
 			{
 					shifter->Set
@@ -321,32 +345,25 @@ public:
 
 		//Gear open close; "B" button
 		if (
-				driver->GetRawButton(3)
+				gear_button->ButtonClicked()
 			)
 		{
-
-			if (
-					g_count % 2 == 1
-				)
-			{
-				g_count = g_count + 1;
-				gear->Set
-				(
-					DoubleSolenoid::Value::kForward
-				);
+			shifter->Set
+			(
+				shifter->Get() ==
+					DoubleSolenoid::Value::kReverse ?
+					DoubleSolenoid::Value::kForward :
+					DoubleSolenoid::Value::kReverse
+			);
 				driver->SetRumble
 				(
-					GenericHID::RumbleType::kLeftRumble, 0
-				 );
-			 }else{
-				 g_count = g_count + 1;
-				 gear->Set
-				 (
-					DoubleSolenoid::Value::kReverse
-				 );
+					GenericHID::RumbleType::kRightRumble, 99
+				);
+
 
 			 }
-		}
+
+
 
 
 //-------------------------------------------------------//
@@ -355,7 +372,7 @@ public:
 		//climber up; right bumper; o
 			if
 			(
-				op->GetRawButton(6)
+				climber_up->ButtonPressed()
 			)
 			{
 				climber->Set(1.0);
@@ -366,7 +383,7 @@ public:
 			//climber down; left bumper
 			if
 			(
-				op->GetRawButton(5)
+				climber_down->ButtonPressed()
 			)
 			{
 				climber->Set(-1.0);
