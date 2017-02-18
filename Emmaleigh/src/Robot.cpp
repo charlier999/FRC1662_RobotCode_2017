@@ -8,6 +8,7 @@
 #include "WPILib.h"
 #include "CANTalon.h"
 #include "Timer.h"
+#include <C:\Users\jmattox\Downloads\Programing Recorses 2017\robot-2014\CitrusButton.h>
 
 
 class Robot: public frc::IterativeRobot
@@ -20,10 +21,16 @@ public:
 	double a_timenow;
 	double g_timenow;
 	double s_timenow;
+	int s_count;
+	int g_count;
+	bool g_timepassed;
+	bool s_timepassed;
 
 //-------------------------------------------------------//
 //              Decoration of Objects                    //
 //-------------------------------------------------------//
+
+	CitrusButton *shifter_button;
 
 	frc::Timer *s_timer;
 	frc::Timer *g_timer;
@@ -66,9 +73,9 @@ public:
 		shooter = new CANTalon(7);
 		climber = new CANTalon(6);
 		aggitater = new CANTalon(3);
-		hood = new CANTalon(9);
+		hood = new CANTalon(5);
 
-		extra = new CANTalon(5);
+		extra = new CANTalon(9);
 
 		drive_base = new RobotDrive
 			(
@@ -80,21 +87,26 @@ public:
 
 		compressor = new Compressor(0);
 
-		gear = new DoubleSolenoid(0, 2);
-		shifter = new DoubleSolenoid(1, 3);
-
-
+		gear = new DoubleSolenoid(1, 3);
+		shifter = new DoubleSolenoid(4, 5);
 
 		s_timer = new frc::Timer();
 		g_timer = new frc::Timer();
 		a_timer = new frc::Timer();
 
-
-
-
 		a_timenow = a_timer->Get();
 		s_timenow = s_timer->Get();
 		g_timenow = g_timer->Get();
+
+		g_count = 0;
+		s_count = 0;
+
+		s_timepassed = s_timer->HasPeriodPassed(5);
+		g_timepassed = g_timer->HasPeriodPassed(5);
+
+		shifter_button = new CitrusButton(driver, 2);
+
+
 
 	}
 	void RobotInit() {
@@ -122,6 +134,10 @@ public:
 		 );
 		hood->ConfigEncoderCodesPerRev(1024);
 
+//-------------------------------------------------------//
+//                   Auto Chooser                        //
+//-------------------------------------------------------//
+			// W.I.P.
 
 
 
@@ -202,7 +218,18 @@ public:
 		{
 			a_timer->Stop(); // Stops auto timer
 		}
-	}
+
+//-------------------------------------------//
+//             Auto 2                        //
+//-------------------------------------------//
+		if
+		(
+			a_timenow == 0 //start of auto
+		)
+		{
+
+		}
+}
 	void TeleopInit()
 	{
 		//starting shifter's timer
@@ -227,32 +254,11 @@ public:
 //                 Drive Remote                          //
 //-------------------------------------------------------//
 
-		//hood forwards; back button
-		if
-		(
-			driver->GetRawButton(7)
-		)
-		{
-			hood->Set(1.0);
-		}else{
-			hood->Set(0.0);
-		}
-
-		//hood backwords; start button
-		if
-		(
-			driver->GetRawButton(8)
-		)
-		{
-			hood->Set(-1.0);
-		}else{
-			hood->Set(0.0);
-		}
 
 		//shooter; left bumper
 		if
 		(
-				driver->GetRawButton(5)
+			driver->GetRawButton(9)
 		)
 		{
 			shooter->Set(0.60);
@@ -260,10 +266,10 @@ public:
 			shooter->Set(0.0);
 		     }
 
-		//intake in; right trigger
+		//Intake in; right trigger
 		if
 		(
-			driver->GetRawAxis(2)
+			driver->GetRawButton(5)
 		)
 		{
 			intake->Set(-1.0);
@@ -271,7 +277,18 @@ public:
 			intake->Set(0.0);
 		}
 
-		//aggitator; "B" button
+		//Intake out; Left Trigger
+		if
+		(
+			driver->GetRawButton(6)
+		)
+		{
+			intake->Set(-1.0);
+		}else{
+			intake->Set(0.0);
+		}
+
+		//Agitator; "B" button
 		if
 		(
 			driver->GetRawButton(3)
@@ -281,14 +298,135 @@ public:
 		}else{
 			aggitater->Set(0.0);
 		}
-		//shifters; "A" button
 		if
+			(
+					shifter_button->ButtonPressed()
+			)
+			{
+					shifter->Set
+					(
+						shifter->Get() ==
+						DoubleSolenoid::Value::kReverse ?
+						DoubleSolenoid::Value::kForward :
+						DoubleSolenoid::Value::kReverse
+					);
+					s_timer->Reset();
+					driver->SetRumble
+					(
+					 GenericHID::RumbleType::kRightRumble, 99
+					 );
+				}else{
+
+				}
+
+		//Gear open close; "B" button
+		if (
+				driver->GetRawButton(3)
+			)
+		{
+
+			if (
+					g_count % 2 == 1
+				)
+			{
+				g_count = g_count + 1;
+				gear->Set
+				(
+					DoubleSolenoid::Value::kForward
+				);
+				driver->SetRumble
+				(
+					GenericHID::RumbleType::kLeftRumble, 0
+				 );
+			 }else{
+				 g_count = g_count + 1;
+				 gear->Set
+				 (
+					DoubleSolenoid::Value::kReverse
+				 );
+
+			 }
+		}
+
+
+//-------------------------------------------------------//
+//                 Operator Remote                       //
+//-------------------------------------------------------//
+		//climber up; right bumper; o
+			if
+			(
+				op->GetRawButton(6)
+			)
+			{
+				climber->Set(1.0);
+			 }else{
+				climber->Set(0.0);
+			 }
+
+			//climber down; left bumper
+			if
+			(
+				op->GetRawButton(5)
+			)
+			{
+				climber->Set(-1.0);
+			}else{
+				climber->Set(0.0);
+			}
+			//hood forwards; back button
+			if
+			(
+				op->GetRawButton(3)
+			)
+			{
+				hood->Set(1.0);
+			}else{
+				hood->Set(0.0);
+			}
+
+			//hood backwards; start button
+			if
+			(
+				op->GetRawButton(4)
+			)
+			{
+				hood->Set(1.0);
+			}else{
+				hood->Set(0.0);
+			}
+
+			shifter_button->Update();
+
+
+	}
+
+	void TestPeriodic()
+	{
+		lw->Run();
+
+	}
+
+private:
+
+	frc::LiveWindow* lw = LiveWindow::GetInstance();
+
+};
+START_ROBOT_CLASS(Robot);
+/*
+ *  Rumbles the controller.
+ * stick->SetRumble(GenericHID::RumbleType::kLeftRumble, 1);
+ *
+DoubleSolenoid exampleDouble = new DoubleSolenoid(1, 2);
+exampleDouble->Set(DoubleSolenoid::Value::kOff);
+exampleDouble->Set(DoubleSolenoid::Value::kForward);
+exampleDouble->Set(DoubleSolenoid::Value::kReverse);
+	if
 		(
 			driver->GetRawButton(2)
 		)
 		{
 			if (
-					s_timenow < .2
+					s_timenow > 1.0
 				)
 			{
 				s_timer->Reset();
@@ -300,73 +438,34 @@ public:
 							 );
 				driver->SetRumble
 				(
-				 GenericHID::RumbleType::kLeftRumble, 1
+				 GenericHID::RumbleType::kRightRumble, 0
 				 );
 			}else{
-				s_timer->Reset();
-			     }
+
+			}
 		 }
 
-		//Gear open close; "B" button
-		if (
-				driver->GetRawButton(1)
-			)
+		 //shifters; "A" button
+		if
+		(
+			driver->GetRawButton(2)
+		)
 		{
-
 			if (
-					g_timenow < .2
+					s_count % 2 == 0
 				)
 			{
-				g_timer->Reset();
-				gear->Set(
-					gear->Get() ==
-					DoubleSolenoid::Value::kReverse ?
-					DoubleSolenoid::Value::kForward :
-					DoubleSolenoid::Value::kReverse
-						  );
-				driver->SetRumble
+				s_count = s_count + 1;
+				shifter->Set
 				(
-						GenericHID::RumbleType::kLeftRumble, 1
+					DoubleSolenoid::Value::kReverse
 				 );
-			 }else{
-				g_timer->Start();
-			 	   }
-		 }
-
-//-------------------------------------------------------//
-//                 Operator Remote                       //
-//-------------------------------------------------------//
-		//climber up; right bumper; o
-			if
-			(
-				op->GetRawButton(5)
-			)
-			{
-				climber->Set(1.0);
-			 }else{
-				climber->Set(0.0);
-			 }
-
-			//climber down; left bumper
-			if
-			(
-				op->GetRawButton(6)
-			)
-			{
-				climber->Set(-1.0);
 			}else{
-				climber->Set(0.0);
+				shifter->Set
+				(
+					DoubleSolenoid::Value::kForward
+				);
+				s_count = s_count + 1;
 			}
-	}
-private:
-};
-START_ROBOT_CLASS(Robot);
-/*
- *  Rumbles the controller.
- * stick->SetRumble(GenericHID::RumbleType::kLeftRumble, 1);
- *
-DoubleSolenoid exampleDouble = new DoubleSolenoid(1, 2);
-exampleDouble->Set(DoubleSolenoid::Value::kOff);
-exampleDouble->Set(DoubleSolenoid::Value::kForward);
-exampleDouble->Set(DoubleSolenoid::Value::kReverse);
+		 }
  */
