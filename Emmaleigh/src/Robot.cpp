@@ -18,17 +18,27 @@ public:
 //-------------------------------------------------------//
 //                 Other Decorations                     //
 //-------------------------------------------------------//
-	double a_timenow;
-	double g_timenow;
-	double s_timenow;
-	int s_count;
-	int g_count;
-	bool g_timepassed;
-	bool s_timepassed;
+	double  a_timenow;
+	double  shoot_timenow;
+	bool 	bottom_enabled;
+	bool 	top_enabled;
 
 //-------------------------------------------------------//
 //              Decoration of Objects                    //
 //-------------------------------------------------------//
+
+
+
+	Joystick *driver;
+	Joystick *op;
+
+	AnalogTrigger *top_a;
+	AnalogInput   *top_in;
+	AnalogTrigger *top_b;
+
+	AnalogTrigger *bottom_a;
+	AnalogInput   *bottom_in;
+	AnalogTrigger *bottom_b;
 
 	CitrusButton *shifter_button;
 	CitrusButton *gear_button;
@@ -36,23 +46,15 @@ public:
 	CitrusButton *intake_in;
 	CitrusButton *intake_out;
 	CitrusButton *climber_up;
-	CitrusButton *climber_down;
-	CitrusButton *agitator_button;
+	//CitrusButton *climber_down;
+	CitrusButton *ball_mover_b;
 	CitrusButton *other;
 	CitrusButton *hood_up;
 	CitrusButton *hood_down;
 
-
-	frc::Timer *s_timer;
-	frc::Timer *g_timer;
-	frc::Timer *a_timer;
-
-	Joystick *driver;
-	Joystick *op;
-
 	CANTalon *drive_right_a, *drive_right_b, *drive_left_a, *drive_left_b;
 	CANTalon *intake;
-	CANTalon *aggitater;
+	CANTalon *ball_mover;
 	CANTalon *shooter;
 	CANTalon *climber;
 	CANTalon *hood;
@@ -60,35 +62,66 @@ public:
 
 	RobotDrive *drive_base;
 
+	frc::Timer *a_timer;
+	frc::Timer *shoot_timer;
+
 	Compressor *compressor;
 
 	DoubleSolenoid *gear;
 	DoubleSolenoid *shifter;
 
-	//WIP  \/
 	//Encoder *shooter_encoder;
 
 	Robot() {
 //-------------------------------------------------------//
 //    Assigning Objects to Components and Electronics    //
 //-------------------------------------------------------//
+
 		driver = new Joystick(0);
 		op = new Joystick(1);
 
+		top_a 		   = new AnalogTrigger(0);
+		top_in 		   = new AnalogInput(1);
+		top_b		   = new AnalogTrigger(top_in);
+
+		bottom_a	   = new AnalogTrigger(2);
+		bottom_in  	   = new AnalogInput(3);
+		bottom_b	   = new AnalogTrigger(bottom_in);
+
+		top_enabled    = top_a->GetInWindow();
+		top_enabled    = top_b->GetTriggerState();
+
+		bottom_enabled = bottom_a->GetInWindow();
+		bottom_enabled = bottom_b->GetTriggerState();
+
+		shifter_button = new CitrusButton(driver, 1);
+		gear_button    = new CitrusButton(driver, 3);
+		intake_in      = new CitrusButton(driver, 5);
+		intake_out     = new CitrusButton(driver, 6);
+		other          = new CitrusButton(driver, 7);
+
+
+		shooter_button = new CitrusButton(op, 1);
+		hood_down      = new CitrusButton(op, 2);
+		ball_mover_b   = new CitrusButton(op, 3);
+		hood_up        = new CitrusButton(op, 4);
+		climber_up     = new CitrusButton(op, 5);
+		//climber_down   = new CitrusButton(op, 6);
+
 		drive_right_a = new CANTalon(8);
 		drive_right_b = new CANTalon(9);
-		drive_left_a = new CANTalon(1);
-		drive_left_b = new CANTalon(2);
+		drive_left_a  = new CANTalon(1);
+		drive_left_b  = new CANTalon(2);
 
-		intake = new CANTalon(4);
-		shooter = new CANTalon(7);
-		climber = new CANTalon(6);
-		aggitater = new CANTalon(3);
-		hood = new CANTalon(5);
+		intake 		  = new CANTalon(4);
+		shooter 	  = new CANTalon(7);
+		climber       = new CANTalon(6);
+		ball_mover    = new CANTalon(3);
+		hood          = new CANTalon(5);
 
-		extra = new CANTalon(9);
+		extra         = new CANTalon(9);
 
-		drive_base = new RobotDrive
+		drive_base    = new RobotDrive
 			(
 			drive_right_a,
 			drive_right_b,
@@ -96,39 +129,15 @@ public:
 			drive_left_b
 			);
 
-		compressor = new Compressor(0);
+		compressor    = new Compressor();
 
-		gear = new DoubleSolenoid(1, 3);
-		shifter = new DoubleSolenoid(4, 5);
+		gear          = new DoubleSolenoid(4, 5);
+		shifter       = new DoubleSolenoid(1, 3);
 
-		s_timer = new frc::Timer();
-		g_timer = new frc::Timer();
-		a_timer = new frc::Timer();
-
-		a_timenow = a_timer->Get();
-		s_timenow = s_timer->Get();
-		g_timenow = g_timer->Get();
-
-		g_count = 0;
-		s_count = 0;
-
-		s_timepassed = s_timer->HasPeriodPassed(5);
-		g_timepassed = g_timer->HasPeriodPassed(5);
-
-		shifter_button = new CitrusButton(driver, 1);
-		gear_button    = new CitrusButton(driver, 3);
-		shooter_button = new CitrusButton(driver, 8);
-		intake_in      = new CitrusButton(driver, 5);
-		intake_out     = new CitrusButton(driver, 6);
-		agitator_button= new CitrusButton(driver, 2);
-		other          = new CitrusButton(driver, 7);
-
-		climber_up     = new CitrusButton(op, 5);
-		climber_down   = new CitrusButton(op, 6);
-		hood_up        = new CitrusButton(op, 4);
-		hood_down      = new CitrusButton(op, 2);
-
-
+		a_timer       = new frc::Timer;
+		shoot_timer   = new frc::Timer;
+		a_timenow     = a_timer->Get();
+		shoot_timenow = shoot_timer->Get();
 
 	}
 	void RobotInit() {
@@ -150,121 +159,108 @@ public:
 //-------------------------------------------------------//
 
 	//Quadrature Encoder CPR=1024
-		hood->SetFeedbackDevice
-		(
-		   CANTalon::QuadEncoder
-		 );
-		hood->ConfigEncoderCodesPerRev(1024);
+//		hood->SetFeedbackDevice
+//		(
+//		   CANTalon::QuadEncoder
+//		 );
+//		hood->ConfigEncoderCodesPerRev(1024);
 
 //-------------------------------------------------------//
 //                   Auto Chooser                        //
 //-------------------------------------------------------//
 			// W.I.P.
 
+//-------------------------------------------------------//
+//                  Analog Triggers                       //
+//-------------------------------------------------------//
+		if
+		(
+			top_enabled == true
+		)
+		{
+			printf ("Top button enabled");
+		}else{
+			printf ("Top button not enabled");
+		}
+
+		if
+		(
+			top_enabled == true
+		)
+		{
+			printf ("Bottom button Enabled");
+		}else{
+			printf ("Bottom button not Enabled");
+		}
 
 
 	}
-	void AutonomousInit() override
-	{
-		a_timer->Reset();
-		a_timer->Start();
-	}
+	void AutonomousInit() override {}
 
 	void AutonomousPeriodic()
-	{
-		if
+{
+		drive_base->SetSafetyEnabled(false);
+		shifter->Set
 		(
-			a_timenow == 0
-		)
-		{
-			drive_base->SetSafetyEnabled(false);
-			drive_base->TankDrive(0.5, 0.5, false);
-		}
+			DoubleSolenoid::Value::kReverse
+		);
+	frc::Wait(0.1);
 
-		if
-		(
-			a_timenow == 3.4	//3.4 second delay until next command
-		)
-		{
+		drive_base->TankDrive(0.5, 0.5, false);
 
-		gear->Set(
-				gear->Get() ==
-				DoubleSolenoid::Value::kReverse ?
-				DoubleSolenoid::Value::kForward :
-				DoubleSolenoid::Value::kReverse
-				  );
-		}
+	frc::Wait(2.5); //3.4 second delay until next command
 
-		if
-		(
-			a_timenow == 4.1 //0.5 second delay until next command
-		)
-		{
+		drive_base->TankDrive(1.0, 0.0, false);
+
+	frc::Wait(0.8);
+
+		drive_base->TankDrive(0.75, 0.75, false);
+
+	frc::Wait(0.2);
+
+		drive_base->TankDrive(0.0, 0.0, false);
+
+	frc::Wait(0.2);
+
+		gear->Set
+			(
+				DoubleSolenoid::Value::kForward
+			);
+
+	frc::Wait(1.0); //0.5 second delay until next command
 
 		drive_base->TankDrive(-0.5, -0.5, false);
 
-		}
+	frc::Wait(0.5); //2.0 second delay until next command
 
-		if
+		gear->Set
 		(
-			a_timenow == 6.1 //2.0 second delay until next command
-		)
-		{
-		gear->Set(
-				gear->Get() ==
-				DoubleSolenoid::Value::kReverse ?
-				DoubleSolenoid::Value::kForward :
-				DoubleSolenoid::Value::kReverse
-				  );
-		}
+			DoubleSolenoid::Value::kReverse
+		);
 
-		if
-		(
-			a_timenow == 9	//3.0 second delay until next command
-		)
-		{
+	frc::Wait(0.5);	//3.0 second delay until next command
+
 		drive_base->TankDrive(0.0, 0.0, false);
-		}
 
-		if
-		(
-			a_timenow == 10 //1.0 second delay until next command
-		)
-		{
-		}
+	frc::Wait(1.0); //1.0 second delay until next command
 
-		if
-		(
-			a_timenow == 15	//end of auto
-		)
-		{
-			a_timer->Stop(); // Stops auto timer
-		}
+		frc::Wait(5.0);//end of auto
 
 //-------------------------------------------//
 //             Auto 2                        //
 //-------------------------------------------//
-		if
-		(
-			a_timenow == 0 //start of auto
-		)
-		{
-
-		}
 }
 	void TeleopInit()
 	{
-		//starting shifter's timer
-		s_timer->Reset();
-		s_timer->Start();
-
-		//starting gear timer
-		g_timer->Reset();
-		g_timer->Start();
+		shoot_timer->Reset();
+		shoot_timer->Start();
 	}
 
 	void TeleopPeriodic()
 	{
+//-------------------------------------------------------//
+//                 Drive Remote                          //
+//-------------------------------------------------------//
 
 		// drive train; (left joystick; y axis; left drive) (right joystick: y axis; right drive)
 		drive_base->TankDrive
@@ -272,21 +268,7 @@ public:
 				-driver->GetRawAxis(5),
 				-driver->GetRawAxis(1)
 		);
-//-------------------------------------------------------//
-//                 Drive Remote                          //
-//-------------------------------------------------------//
 
-
-		//shooter; left bumper
-		if
-		(
-			shooter_button->ButtonPressed()
-		)
-		{
-			shooter->Set(1.0);
-		}else{
-			shooter->Set(0.0);
-		     }
 
 		//Intake in; right trigger
 		if
@@ -296,30 +278,16 @@ public:
 		{
 			intake->Set(-1.0);
 		}else{
-			intake->Set(0.0);
-		}
+			if
+			(
+					intake_out->ButtonPressed()
+			)
+			{
+			intake->Set(1.0);
+			}else{
+				intake->Set(0.0);
+			}
 
-		//Intake out; Left Trigger
-		if
-		(
-			intake_out->ButtonPressed()
-		)
-		{
-			intake->Set(-1.0);
-		}else{
-			intake->Set(0.0);
-		}
-
-		//Agitator; "B" button
-		if
-		(
-			agitator_button->ButtonPressed()
-		)
-		{
-			aggitater->Set(1.0);
-		}else{
-			aggitater->Set(0.0);
-		}
 
 		//shifters
 		if
@@ -334,13 +302,6 @@ public:
 						DoubleSolenoid::Value::kForward :
 						DoubleSolenoid::Value::kReverse
 					);
-					s_timer->Reset();
-					driver->SetRumble
-					(
-					 GenericHID::RumbleType::kRightRumble, 99
-					 );
-				}else{
-
 				}
 
 		//Gear open close; "B" button
@@ -348,27 +309,32 @@ public:
 				gear_button->ButtonClicked()
 			)
 		{
-			shifter->Set
+			gear->Set
 			(
-				shifter->Get() ==
+				gear->Get() ==
 					DoubleSolenoid::Value::kReverse ?
 					DoubleSolenoid::Value::kForward :
 					DoubleSolenoid::Value::kReverse
 			);
-				driver->SetRumble
-				(
-					GenericHID::RumbleType::kRightRumble, 99
-				);
-
-
 			 }
-
-
-
-
 //-------------------------------------------------------//
 //                 Operator Remote                       //
 //-------------------------------------------------------//
+		//shooter; left bumper
+		if
+		(
+			shooter_button->ButtonPressed()
+		)
+		{
+			shoot_timer->Reset();
+			shooter->Set(-1.0);
+			ball_mover->Set(1.0);
+		}else{
+			shooter->Set(0.0);
+			ball_mover->Set(0.0);
+		     }
+
+
 		//climber up; right bumper; o
 			if
 			(
@@ -380,31 +346,19 @@ public:
 				climber->Set(0.0);
 			 }
 
-			//climber down; left bumper
-			if
-			(
-				climber_down->ButtonPressed()
-			)
-			{
-				climber->Set(-1.0);
-			}else{
-				climber->Set(0.0);
-			}
-			//hood forwards; back button
-			if
-			(
-				op->GetRawButton(3)
-			)
-			{
-				hood->Set(1.0);
-			}else{
-				hood->Set(0.0);
-			}
+			//climber down;
+			//if
+		//	(
+		//		climber_down->ButtonPressed()
+		//	)
+		//	{
+		//		climber->Set(-1.0);
+		//	}
 
-			//hood backwards; start button
+			//hood forwards;
 			if
 			(
-				op->GetRawButton(4)
+				hood_up->ButtonPressed()
 			)
 			{
 				hood->Set(1.0);
@@ -412,16 +366,20 @@ public:
 				hood->Set(0.0);
 			}
 
-			shifter_button->Update();
-
-
+			//hood backwards;
+			if
+			(
+				hood_down->ButtonPressed()
+			)
+			{
+				hood->Set(1.0);
+			}else{
+				hood->Set(0.0);
+			}
 	}
-
-	void TestPeriodic()
-	{
-		lw->Run();
-
-	}
+		shifter_button->Update();
+		gear_button->Update();
+}
 
 private:
 
@@ -485,4 +443,16 @@ exampleDouble->Set(DoubleSolenoid::Value::kReverse);
 				s_count = s_count + 1;
 			}
 		 }
+
+
+		 //Agitator;
+		if
+		(
+			agitator_button->ButtonPressed()
+		)
+		{
+			aggitater->Set(1.0);
+		}else{
+			aggitater->Set(0.0);
+		}
  */
