@@ -14,12 +14,10 @@
 class Robot: public frc::IterativeRobot
 {
 public:
-
 //-------------------------------------------------------//
 //                 Other Decorations                     //
 //-------------------------------------------------------//
-	double  a_timenow;
-	double  shoot_timenow;
+
 	bool 	bottom_enabled;
 	bool 	top_enabled;
 
@@ -58,12 +56,9 @@ public:
 	CANTalon *shooter;
 	CANTalon *climber;
 	CANTalon *hood;
-	CANTalon *extra;
+
 
 	RobotDrive *drive_base;
-
-	frc::Timer *a_timer;
-	frc::Timer *shoot_timer;
 
 	Compressor *compressor;
 
@@ -94,10 +89,10 @@ public:
 		bottom_enabled = bottom_a->GetInWindow();
 		bottom_enabled = bottom_b->GetTriggerState();
 
-		shifter_button = new CitrusButton(driver, 1);
-		gear_button    = new CitrusButton(driver, 3);
-		intake_in      = new CitrusButton(driver, 5);
-		intake_out     = new CitrusButton(driver, 6);
+		shifter_button = new CitrusButton(driver, 6);
+		gear_button    = new CitrusButton(driver, 5);
+		intake_in      = new CitrusButton(driver, 1);
+		intake_out     = new CitrusButton(driver, 3);
 		other          = new CitrusButton(driver, 7);
 
 
@@ -119,8 +114,6 @@ public:
 		ball_mover    = new CANTalon(3);
 		hood          = new CANTalon(5);
 
-		extra         = new CANTalon(9);
-
 		drive_base    = new RobotDrive
 			(
 			drive_right_a,
@@ -133,12 +126,6 @@ public:
 
 		gear          = new DoubleSolenoid(4, 5);
 		shifter       = new DoubleSolenoid(1, 3);
-
-		a_timer       = new frc::Timer;
-		shoot_timer   = new frc::Timer;
-		a_timenow     = a_timer->Get();
-		shoot_timenow = shoot_timer->Get();
-
 	}
 	void RobotInit() {
 //-------------------------------------------------------//
@@ -168,11 +155,22 @@ public:
 //-------------------------------------------------------//
 //                   Auto Chooser                        //
 //-------------------------------------------------------//
-			// W.I.P.
+
+		chooser.AddDefault (GearM, GearM);
+		chooser.AddObject  (GearL, GearL);
+		chooser.AddObject  (GearR, GearR);
+		frc::SmartDashboard::PutData("Auto Modes", &chooser);
 
 //-------------------------------------------------------//
-//                  Analog Triggers                       //
+//                  Analog Triggers                      //
 //-------------------------------------------------------//
+
+		//trigger->SetLimitsRaw(2048, 3200);
+		//trigger->SetLimitsVoltage(0, 3.4);
+		top_a->SetLimitsVoltage(0, 3.4);
+		top_b->SetLimitsVoltage(0, 3.4);
+		bottom_a->SetLimitsVoltage(0, 3.4);
+
 		if
 		(
 			top_enabled == true
@@ -195,66 +193,169 @@ public:
 
 
 	}
-	void AutonomousInit() override {}
+	void AutonomousInit() override
+{
+	autoSelected = chooser.GetSelected();
+	// std::string autoSelected = SmartDashboard::GetString("Auto Selector", autoNameDefault);
+	std::cout << "Auto selected: " << autoSelected << std::endl;
+
+	if
+	(
+		autoSelected == GearM
+	)
+	{
+		// Auto Init goes here
+	}
+}
 
 	void AutonomousPeriodic()
+{
+	//-------------------------------------------//
+	//              Left Gear                    //
+	//-------------------------------------------//
+
+	if
+	(
+		autoSelected == GearL
+	)
 {
 		drive_base->SetSafetyEnabled(false);
 		shifter->Set
 		(
-			DoubleSolenoid::Value::kReverse
+			DoubleSolenoid::Value::kReverse  		//Sets shifters to high/low
 		);
-	frc::Wait(0.1);
 
-		drive_base->TankDrive(0.5, 0.5, false);
+	frc::Wait(0.1);									//Wait for .1 sec
 
-	frc::Wait(2.5); //3.4 second delay until next command
+		drive_base->TankDrive(0.5, 0.5, false);		//Robot goes 12 O-Clock @ Half Speed
 
-		drive_base->TankDrive(1.0, 0.0, false);
+	frc::Wait(2.5); 								//Wait for 2.5 sec
 
-	frc::Wait(0.8);
+		drive_base->TankDrive(0.0, 1.0, false);		//Robot turns Right w/ Left Drive @ Full Speed
 
-		drive_base->TankDrive(0.75, 0.75, false);
+	frc::Wait(0.8);									//Wait for .8 sec
 
-	frc::Wait(0.2);
+		drive_base->TankDrive(0.75, 0.75, false);	//Robot goes 12 O-Clock @ 3/4 speed
 
-		drive_base->TankDrive(0.0, 0.0, false);
+	frc::Wait(0.2);									//Wait for .2 sec
 
-	frc::Wait(0.2);
+		drive_base->TankDrive(0.0, 0.0, false);		//Robot Stops
 
-		gear->Set
-			(
-				DoubleSolenoid::Value::kForward
-			);
-
-	frc::Wait(1.0); //0.5 second delay until next command
-
-		drive_base->TankDrive(-0.5, -0.5, false);
-
-	frc::Wait(0.5); //2.0 second delay until next command
+	frc::Wait(0.2);									//Wait for .2 sec
 
 		gear->Set
 		(
-			DoubleSolenoid::Value::kReverse
+					DoubleSolenoid::Value::kForward		//Robot Opens Gear Holder
 		);
 
-	frc::Wait(0.5);	//3.0 second delay until next command
+	frc::Wait(1.0);									//Wait for 1 sec
 
-		drive_base->TankDrive(0.0, 0.0, false);
+		drive_base->TankDrive(-0.5, -0.5, false);	//Robot goes 6 O-Clock @ Half Speed
 
-	frc::Wait(1.0); //1.0 second delay until next command
+	frc::Wait(0.5); 								//Wait for .5 sec
 
-		frc::Wait(5.0);//end of auto
+		gear->Set
+		(
+			DoubleSolenoid::Value::kReverse			//Robot Closes Gear Holder
+		);
 
-//-------------------------------------------//
-//             Auto 2                        //
-//-------------------------------------------//
+	frc::Wait(0.5);									//Wait for .5 sec
+
+		drive_base->TankDrive(0.0, 0.0, false);		//Robot stops
+
 }
-	void TeleopInit()
-	{
-		shoot_timer->Reset();
-		shoot_timer->Start();
-	}
+	//-------------------------------------------//
+	//             Middle Gear                   //
+	//-------------------------------------------//
+
+	if
+	(
+		autoSelected == GearM
+	)
+{
+		drive_base->SetSafetyEnabled(false);
+		shifter->Set
+		(
+			DoubleSolenoid::Value::kReverse  		//Sets shifters to high/low
+		);
+
+	frc::Wait(0.05); 								//Waits for .05 secs
+
+		drive_base->TankDrive(0.5, 0.5, false); 	//Robot goes 12 O-clock @ half speed
+
+	frc::Wait(0.0);									//Wait for ____ secs
+
+		gear->Set
+			(
+				DoubleSolenoid::Value::kForward		//Opens gear holder
+			);
+	frc::Wait(0.3);									//Wait for .3 secs
+
+		drive_base->TankDrive(-1.0, -1.0, false);	//Robot goes 6 O-Clock @ full speed
+
+	frc::Wait(0.2);									//Wait for .2 secs
+
+		//More code to be placed
+}
+
+	//-------------------------------------------//
+	//                Gear Right                 //
+	//-------------------------------------------//
+
+	if
+	(
+		autoSelected == GearR
+	)
+{
+		drive_base->SetSafetyEnabled(false);
+		shifter->Set
+			(
+				DoubleSolenoid::Value::kReverse
+			);
+	frc::Wait(0.1);									//Wait for .1 sec
+
+		drive_base->TankDrive(0.5, 0.5, false);		//Robot goes 12 O-Clock @ Half Speed
+
+	frc::Wait(2.5); 								//Wait for 2.5 sec
+
+		drive_base->TankDrive(1.0, 0.0, false);		//Robot turns left w/ Right Drive @ Full Speed
+
+	frc::Wait(0.8);									//Wait for .8 sec
+
+		drive_base->TankDrive(0.75, 0.75, false);	//Robot goes 12 O-Clock @ 3/4 speed
+
+	frc::Wait(0.2);									//Wait for .2 sec
+
+		drive_base->TankDrive(0.0, 0.0, false);		//Robot Stops
+
+	frc::Wait(0.2);									//Wait for .2 sec
+
+		gear->Set
+			(
+				DoubleSolenoid::Value::kForward		//Robot Opens Gear Holder
+			);
+
+	frc::Wait(1.0);									//Wait for 1 sec
+
+		drive_base->TankDrive(-0.5, -0.5, false);	//Robot goes 6 O-Clock @ Half Speed
+
+	frc::Wait(0.5); 								//Wait for .5 sec
+
+		gear->Set
+		(
+			DoubleSolenoid::Value::kReverse			//Robot Closes Gear Holder
+		);
+
+	frc::Wait(0.5);									//Wait for .5 sec
+
+		drive_base->TankDrive(0.0, 0.0, false);		//Robot stops
+
+}
+
+
+
+}
+	void TeleopInit(){}
 
 	void TeleopPeriodic()
 	{
@@ -326,7 +427,6 @@ public:
 			shooter_button->ButtonPressed()
 		)
 		{
-			shoot_timer->Reset();
 			shooter->Set(-1.0);
 			ball_mover->Set(1.0);
 		}else{
@@ -384,6 +484,11 @@ public:
 private:
 
 	frc::LiveWindow* lw = LiveWindow::GetInstance();
+	frc::SendableChooser<std::string> chooser;
+	const std::string GearM			  = "GearM";
+	const std::string GearL			  = "GearL";
+	const std::string GearR			  = "GearR";
+	std::string autoSelected;
 
 };
 START_ROBOT_CLASS(Robot);
@@ -391,68 +496,3 @@ START_ROBOT_CLASS(Robot);
  *  Rumbles the controller.
  * stick->SetRumble(GenericHID::RumbleType::kLeftRumble, 1);
  *
-DoubleSolenoid exampleDouble = new DoubleSolenoid(1, 2);
-exampleDouble->Set(DoubleSolenoid::Value::kOff);
-exampleDouble->Set(DoubleSolenoid::Value::kForward);
-exampleDouble->Set(DoubleSolenoid::Value::kReverse);
-	if
-		(
-			driver->GetRawButton(2)
-		)
-		{
-			if (
-					s_timenow > 1.0
-				)
-			{
-				s_timer->Reset();
-				shifter->Set(
-					shifter->Get() ==
-					DoubleSolenoid::Value::kReverse ?
-					DoubleSolenoid::Value::kForward :
-					DoubleSolenoid::Value::kReverse
-							 );
-				driver->SetRumble
-				(
-				 GenericHID::RumbleType::kRightRumble, 0
-				 );
-			}else{
-
-			}
-		 }
-
-		 //shifters; "A" button
-		if
-		(
-			driver->GetRawButton(2)
-		)
-		{
-			if (
-					s_count % 2 == 0
-				)
-			{
-				s_count = s_count + 1;
-				shifter->Set
-				(
-					DoubleSolenoid::Value::kReverse
-				 );
-			}else{
-				shifter->Set
-				(
-					DoubleSolenoid::Value::kForward
-				);
-				s_count = s_count + 1;
-			}
-		 }
-
-
-		 //Agitator;
-		if
-		(
-			agitator_button->ButtonPressed()
-		)
-		{
-			aggitater->Set(1.0);
-		}else{
-			aggitater->Set(0.0);
-		}
- */
