@@ -123,9 +123,13 @@ shifter        = new DoubleSolenoid(1, 3);
 
 shifterLight   = new Solenoid(6);
 
+
+
+
 }
 
 void RobotInit() {
+
 
 //-------------------------------------------------------//
 //                Robot vision Code                      //
@@ -154,6 +158,7 @@ frc::SmartDashboard::PutData("Auto Modes", &chooser);
 
 b_chooser.AddDefault (Brake, Brake);
 b_chooser.AddObject  (Coast, Coast);
+frc::SmartDashboard::PutData("Brake", & b_chooser);
 
 }
 
@@ -544,9 +549,6 @@ std::cout << "Brake Selected: " << brake_Selected << std::endl;
 
 
 //changes the mode of drive CANTalons from Brake to Cost and from Cost to Brake
-
-
-
 if
 (
 	brake_Selected == Coast
