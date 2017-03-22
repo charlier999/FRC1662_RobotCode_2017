@@ -20,6 +20,7 @@ public:
 	bool 	bottom_enabled;
 	bool 	top_enabled;
 	bool	shift_enabled;
+	bool	brake;
 	int		shooter_setting;
 	int		auto_stop;
 
@@ -72,7 +73,9 @@ op = new Joystick(1);
 
 shift_enabled  = new bool;
 shooter_setting= 0;
-auto_stop = 0;
+auto_stop	   = 0;
+
+brake		   = new bool;
 
 top_a 		   = new AnalogTrigger(0);
 top_in 		   = new AnalogInput(1);
@@ -149,6 +152,7 @@ chooser.AddObject  (GearL, GearL);
 chooser.AddObject  (GearR, GearR);
 chooser.AddObject  (Strait, Strait);
 chooser.AddObject  (Check, Check);
+chooser.AddObject  (sec, sec);
 frc::SmartDashboard::PutData("Auto Modes", &chooser);
 
 }
@@ -159,6 +163,18 @@ void AutonomousInit() override
 autoSelected = chooser.GetSelected();
 // std::string autoSelected = SmartDashboard::GetString("Auto Selector", autoNameDefault);
 std::cout << "Auto selected: " << autoSelected << std::endl;
+
+if
+(
+	autoSelected == sec
+)
+{
+
+drive_right_a->ConfigNeutralMode (CANSpeedController::NeutralMode::kNeutralMode_Brake);
+drive_right_b->ConfigNeutralMode (CANSpeedController::NeutralMode::kNeutralMode_Brake);
+drive_left_a ->ConfigNeutralMode (CANSpeedController::NeutralMode::kNeutralMode_Brake);
+drive_left_b ->ConfigNeutralMode (CANSpeedController::NeutralMode::kNeutralMode_Brake);
+}
 
 if
 (
@@ -231,6 +247,29 @@ if
 	auto_stop == 0
 )
 {
+
+if
+(
+	autoSelected == sec
+)
+{
+	drive_base->SetSafetyEnabled(false);
+	shifter->Set
+	(
+		DoubleSolenoid::Value::kReverse
+	);
+
+frc::Wait(.5);
+
+drive_base->TankDrive(1.0, 1.0, false);
+
+frc::Wait(1);
+
+drive_base->TankDrive(0.0, 0.0, false);
+
+auto_stop = auto_stop + 1;
+}
+
 
 //-------------------------------------------//
 //               Systems Check               //
@@ -310,7 +349,7 @@ frc::Wait(0.1);									//Wait for .1 sec
 
 	drive_base->TankDrive(1, 1, false);			//Drive @ full speed 		->
 
-frc::Wait(1.1);									//Wait 1.1 sec
+frc::Wait(.505);									//Wait 1.1 sec
 
 	drive_base->TankDrive(0.0, 0.0, false);		//Drive Stops 				[]
 
@@ -318,7 +357,7 @@ frc::Wait(0.2);									//Wait .2 sec
 
 	drive_base->TankDrive(1, 0.0, false);		//Left Drive @ full
 
-frc::Wait(0.42);								//Wait .42 sec
+frc::Wait(0.32);								//Wait .42 sec
 
 	drive_base->TankDrive(0.0, 0.0, false);		//Drive Stop 				[]
 
@@ -326,11 +365,11 @@ frc::Wait(0.3);									//Wait .3 sec
 
 	drive_base->TankDrive(1, 1, false);			//Drive @ full 				->
 
-frc::Wait(0.3);									//Wait .3 sec
+frc::Wait(.867);									//Wait .3 sec
 
 	drive_base->TankDrive(0.0, 0.0, false);		//Drive Stop 				[]
 
-frc::Wait(0.2);									//Wait .2 sec
+frc::Wait(0.5);									//Wait .2 sec
 
 	gear->Set
 	(
@@ -341,7 +380,7 @@ frc::Wait(1);									//Wait 1 sec
 
 	drive_base->TankDrive(-1, -1, false);		//Drive Reverse @ full 		<-
 
-frc::Wait(.3);									//Wait .3
+frc::Wait(.5);									//Wait .3
 
 	drive_base->TankDrive(0.0, 0.0, false);		//Drive Stop 				[]
 
@@ -492,13 +531,40 @@ frc::Wait(1.7);									//Wait 1.7 sec
 }
 }
 }
+
 void TeleopInit()
 {
-	auto_stop = 0;
+
+//changes the mode of drive CANTalons from Brake to Cost and from Cost to Brake
+brake = true;
+
+// True  - Luke
+// False - Charles
+
+auto_stop = 0;
+
+if
+(
+	brake == true
+)
+{
+	//Drive Train is Coast
 	drive_right_a  ->ConfigNeutralMode (CANSpeedController::NeutralMode::kNeutralMode_Coast);
 	drive_right_b  ->ConfigNeutralMode (CANSpeedController::NeutralMode::kNeutralMode_Coast);
 	drive_left_a   ->ConfigNeutralMode (CANSpeedController::NeutralMode::kNeutralMode_Coast);
 	drive_left_b   ->ConfigNeutralMode (CANSpeedController::NeutralMode::kNeutralMode_Coast);
+	climber        ->ConfigNeutralMode (CANSpeedController::NeutralMode::kNeutralMode_Coast);
+
+}else{
+
+	//Drive Train is in Brake
+	drive_right_a  ->ConfigNeutralMode (CANSpeedController::NeutralMode::kNeutralMode_Brake);
+	drive_right_b  ->ConfigNeutralMode (CANSpeedController::NeutralMode::kNeutralMode_Brake);
+	drive_left_a   ->ConfigNeutralMode (CANSpeedController::NeutralMode::kNeutralMode_Brake);
+	drive_left_b   ->ConfigNeutralMode (CANSpeedController::NeutralMode::kNeutralMode_Brake);
+	climber        ->ConfigNeutralMode (CANSpeedController::NeutralMode::kNeutralMode_Coast);
+
+}
 
 }
 
@@ -630,6 +696,7 @@ const std::string GearL		= "GearL";
 const std::string GearR		= "GearR";
 const std::string Strait	= "Strait" ;
 const std::string Check     = "Check";
+const std::string sec      = "5sec";
 std::string autoSelected;
 
 };
